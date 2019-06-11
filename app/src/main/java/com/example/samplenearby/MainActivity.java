@@ -36,6 +36,8 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -45,7 +47,11 @@ public class MainActivity extends AppCompatActivity {
     private String SERVICE_ID = "com.example.samplenearby";
     TextView mssgReceived;
     EditText mssg;
-    Button b, b1;
+    Button b, b1,b3,b4;
+    ArrayList<String> endpoints;
+
+    public String status="nope";
+
 
     // Callbacks for receiving payloads
     private final PayloadCallback payloadCallback =
@@ -71,11 +77,14 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        endpoints = new ArrayList<String>();
 
         mssgReceived = findViewById(R.id.textView);
         mssg = findViewById(R.id.editText);
         b = findViewById(R.id.button);
         b1 = findViewById(R.id.button2);
+        b3 = findViewById(R.id.button3);
+        b4 = findViewById(  R.id.button4);
 
         b.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -92,6 +101,33 @@ public class MainActivity extends AppCompatActivity {
                 startAdvertising();
             }
         });
+
+        b3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(status!= "nope") {
+                    byte[] b = mssg.getText().toString().getBytes(StandardCharsets.UTF_8);
+                    Payload stringPayload = Payload.fromBytes(b);
+
+                    for(int i=0;i< endpoints.size();i++) {
+                        Nearby.getConnectionsClient(getApplicationContext()).sendPayload(endpoints.get(i), stringPayload);
+                    }
+                   // Nearby.getConnectionsClient(getApplicationContext()).sendPayload(status, stringPayload);
+                }
+                else {
+                    Toast.makeText(getApplicationContext(),"nahi bhej pawat", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        b4.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startAdvertising();
+                startDiscovery();
+            }
+        });
+
 
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -122,7 +158,7 @@ public class MainActivity extends AppCompatActivity {
             }
         } else {
             // Permission has already been granted
-            startAdvertising();
+            //startAdvertising();
         }
     }
 
@@ -233,12 +269,15 @@ public class MainActivity extends AppCompatActivity {
                 public void onConnectionResult(String endpointId, ConnectionResolution result) {
                     switch (result.getStatus().getStatusCode()) {
                         case ConnectionsStatusCodes.STATUS_OK:
+                            status = endpointId;
+                            endpoints.add(endpointId);
+
                             // We're connected! Can now start sending and receiving data.
-                            Toast.makeText(getApplicationContext(),"Connected", Toast.LENGTH_SHORT).show();
+
+
+
 //                            Payload bytesPayload = Payload.fromBytes(new byte[] {0xa, 0xb, 0xc, 0xd});
-                            byte[] b = mssg.getText().toString().getBytes(StandardCharsets.UTF_8);
-                            Payload stringPayload = Payload.fromBytes(b);
-                            Nearby.getConnectionsClient(getApplicationContext()).sendPayload(endpointId, stringPayload);
+
                             break;
                         case ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED:
                             // The connection was rejected by one or both sides.
@@ -261,7 +300,7 @@ public class MainActivity extends AppCompatActivity {
     private final EndpointDiscoveryCallback endpointDiscoveryCallback =
             new EndpointDiscoveryCallback() {
                 @Override
-                public void onEndpointFound(String endpointId, DiscoveredEndpointInfo info) {
+                public void onEndpointFound(final String endpointId, DiscoveredEndpointInfo info) {
                     // An endpoint was found. We request a connection to it.
                     Nearby.getConnectionsClient(getApplicationContext())
                             .requestConnection(getUserNickname(), endpointId, connectionLifecycleCallback)
@@ -272,6 +311,7 @@ public class MainActivity extends AppCompatActivity {
                                             // We successfully requested a connection. Now both sides
                                             // must accept before the connection is established.
                                             Toast.makeText(getApplicationContext(),"Connected", Toast.LENGTH_SHORT).show();
+
                                         }
                                     })
                             .addOnFailureListener(
