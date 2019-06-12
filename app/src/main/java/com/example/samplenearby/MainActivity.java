@@ -16,6 +16,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -45,12 +46,18 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 0;
     private String SERVICE_ID = "com.example.samplenearby";
-    TextView mssgReceived;
+
     EditText mssg;
     Button b, b1,b3,b4;
     ArrayList<String> endpoints;
+    ArrayList<String> listItems=new ArrayList<String>();
+    CustomListAdapter whatever;
 
     public String status="nope";
+
+    String[] infoArray = {
+    };
+    ListView listView;
 
 
     // Callbacks for receiving payloads
@@ -61,7 +68,13 @@ public class MainActivity extends AppCompatActivity {
                     byte[] receivedBytes = payload.asBytes();
                     if(receivedBytes != null) {
                         String string = new String(receivedBytes, StandardCharsets.UTF_8);
-                        mssgReceived.setText(string);
+                        listItems.add(string);
+                        whatever.notifyDataSetChanged();
+                        Payload stringPayload = Payload.fromBytes(receivedBytes);
+                        for(int i=0;i< endpoints.size();i++) {
+                            if(!endpoints.get(i).equals(endpointId))
+                                Nearby.getConnectionsClient(getApplicationContext()).sendPayload(endpoints.get(i), stringPayload);
+                        }
                     }
                 }
 
@@ -79,7 +92,11 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         endpoints = new ArrayList<String>();
 
-        mssgReceived = findViewById(R.id.textView);
+       whatever = new CustomListAdapter(this, listItems);
+        listView = (ListView) findViewById(R.id.listview);
+        listView.setAdapter(whatever);
+
+
         mssg = findViewById(R.id.editText);
         b = findViewById(R.id.button);
         b1 = findViewById(R.id.button2);
@@ -112,7 +129,6 @@ public class MainActivity extends AppCompatActivity {
                     for(int i=0;i< endpoints.size();i++) {
                         Nearby.getConnectionsClient(getApplicationContext()).sendPayload(endpoints.get(i), stringPayload);
                     }
-                   // Nearby.getConnectionsClient(getApplicationContext()).sendPayload(status, stringPayload);
                 }
                 else {
                     Toast.makeText(getApplicationContext(),"nahi bhej pawat", Toast.LENGTH_SHORT).show();
