@@ -1,7 +1,10 @@
 package com.example.samplenearby;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.pm.PackageManager;
+import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
@@ -35,7 +38,10 @@ import com.google.android.gms.nearby.connection.Strategy;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
+import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
+
+import network.HotspotService;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -45,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
     private String SERVICE_ID = "com.example.samplenearby";
     TextView mssgReceived;
     EditText mssg;
-    Button b, b1;
+    Button b, b1, wifiOn;
 
     // Callbacks for receiving payloads
     private final PayloadCallback payloadCallback =
@@ -76,6 +82,19 @@ public class MainActivity extends AppCompatActivity {
         mssg = findViewById(R.id.editText);
         b = findViewById(R.id.button);
         b1 = findViewById(R.id.button2);
+
+        wifiOn = findViewById(R.id.wifiOn);
+
+        wifiOn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(HotspotService.turnHotspotOn(getApplicationContext())){
+                    Toast.makeText(getApplicationContext(), "Changing Wifi State", Toast.LENGTH_SHORT).show();
+                }else {
+                    Toast.makeText(getApplicationContext(),"not running", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
 
         b.setOnClickListener(new View.OnClickListener() {
             @Override
